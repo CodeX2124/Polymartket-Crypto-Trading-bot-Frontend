@@ -3,20 +3,23 @@ import { PageHeader } from "@/components/page-header"
 import { AccountOverview } from "@/components/account-overview"
 import { PnLChart } from "@/components/pnl-chart"
 import { PositionsActivitiesCard } from "@/components/positions-activities-card"
+import {TradeSettingsProvider} from "@/hooks/useTradeSettingContext"
 
 export default function Dashboard() {
   return (
-    <Layout>
-      <PageHeader title="Dashboard" subtitle="Welcome back! Here's your trading overview." />
+    <TradeSettingsProvider>
+      <Layout>
+        <PageHeader title="Dashboard" subtitle="Welcome back! Here's your trading overview." />
 
-      {/* Account Overview */}
-      <AccountOverview />
+        {/* Account Overview */}
+        <AccountOverview />
 
-      {/* Charts and Tables */}
-      <div className="grid gap-6 mt-6 lg:grid-cols-2">
-        <PnLChart />
-        <PositionsActivitiesCard />
-      </div>
-    </Layout>
+        {/* Charts and Tables */}
+        <div className="grid gap-6 mt-6 lg:grid-cols-2">
+          <PnLChart />
+          <PositionsActivitiesCard />
+        </div>
+      </Layout>
+    </TradeSettingsProvider>
   )
 }

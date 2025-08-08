@@ -8,10 +8,10 @@ import { usePathname } from "next/navigation"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
-  { name: "Sports Markets", href: "/sports-markets", icon: Trophy },
-  { name: "Your Masters", href: "/masters", icon: Users },
-  { name: "Ranking", href: "/ranking", icon: Crown },
-  { name: "Support", href: "/support", icon: HelpCircle },
+  // { name: "Sports Markets", href: "/sports-markets", icon: Trophy },
+  // { name: "Your Masters", href: "/masters", icon: Users },
+  // { name: "Ranking", href: "/ranking", icon: Crown },
+  // { name: "Support", href: "/support", icon: HelpCircle },
   { name: "Settings", href: "/settings", icon: Settings },
 ]
 
