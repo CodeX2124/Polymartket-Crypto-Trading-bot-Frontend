@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import {useTradeSettings} from "@/hooks/useTradeSettingContext"
 import { toast } from 'react-toastify';
+import { startCopyTrading, stopCopyTrading } from "@/app/api";
 
 interface PageHeaderProps {
   title: string
@@ -11,22 +12,55 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle }: PageHeaderProps) {
 
-  const { startCopyTrading, settings, stopCopyTrading } = useTradeSettings();
+  const { settings } = useTradeSettings();
 
   const CopyhandleClick = async () => 
   {
     try {
       
       console.log(settings);
-      if((!settings.buy.byAmount && !settings.buy.byCategory && !settings.buy.byOrder && !settings.buy.byPrice && !settings.buy.byTillDayEvent)
-        && (!settings.sell.byAmount && !settings.sell.byCategory && !settings.sell.byOrder && !settings.sell.byPrice && !settings.sell.byTillDayEvent)
-        || (((!settings.buy.copyOrderSize.size && !settings.buy.copyOrderSize.type) && (!settings.sell.copyOrderSize.size && !settings.sell.copyOrderSize.type))
-        && ((!settings.buy.limitOrderSize.size && !settings.buy.limitOrderSize.type) && (!settings.sell.limitOrderSize.size && !settings.sell.limitOrderSize.type)))
-      ){
-        toast.error("Add conditions");
-      } else{
-        await startCopyTrading();
-        toast.success("Monitoring successfully");
+      const hasBuyConditions = (
+        settings.buy.byAmount || 
+        settings.buy.byCategory || 
+        settings.buy.byOrder || 
+        settings.buy.byPrice || 
+        settings.buy.byTillDayEvent
+      );
+      
+      const hasSellConditions = (
+        settings.sell.byAmount || 
+        settings.sell.byCategory || 
+        settings.sell.byOrder || 
+        settings.sell.byPrice || 
+        settings.sell.byTillDayEvent
+      );
+      
+      const hasCopyOrderConditions = (
+        settings.buy.copyOrderSize.size || 
+        settings.buy.copyOrderSize.type || 
+        settings.sell.copyOrderSize.size || 
+        settings.sell.copyOrderSize.type
+      );
+      
+      const hasLimitOrderConditions = (
+        settings.buy.limitOrderSize.size || 
+        settings.buy.limitOrderSize.type || 
+        settings.sell.limitOrderSize.size || 
+        settings.sell.limitOrderSize.type
+      );
+
+
+      const missingConditions = [];
+      if (!hasBuyConditions) missingConditions.push("buy conditions");
+      if (!hasSellConditions) missingConditions.push("sell conditions");
+      if (!hasCopyOrderConditions) missingConditions.push("copy order conditions");
+      if (!hasLimitOrderConditions) missingConditions.push("limit order conditions");
+
+      if (missingConditions.length === 0) {
+        await startCopyTrading(settings);
+        toast.success("Monitoring successfully started");
+      } else {
+        toast.error(`Please configure: ${missingConditions.join(", ")}`);
       }
     } catch (error) {
       console.log(error);

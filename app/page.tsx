@@ -15,8 +15,8 @@ export default function Dashboard() {
         <AccountOverview />
 
         {/* Charts and Tables */}
-        <div className="grid gap-6 mt-6 lg:grid-cols-2">
-          <PnLChart />
+        <div className="mt-6">
+          {/* <PnLChart /> */}
           <PositionsActivitiesCard />
         </div>
       </Layout>

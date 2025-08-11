@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useState, useContext, ReactNode } from 'react';
+import { createContext, useState, useContext, ReactNode, Dispatch, SetStateAction } from 'react';
 
 // Define types
 type TradeSettingFields = 'byOrder' | 'byPrice' | 'byCategory' | 'byTillDayEvent' | 'byAmount';
@@ -8,6 +8,11 @@ type TradeSettingFields = 'byOrder' | 'byPrice' | 'byCategory' | 'byTillDayEvent
 interface RangeValues {
   min?: string;
   max?: string;
+}
+
+interface OrderFilterValues {
+  size?: string;
+  type?: string;
 }
 
 interface TradeSettings {
@@ -19,17 +24,23 @@ interface TradeSettings {
   orderSize: RangeValues;
   price: RangeValues;
   amount: RangeValues;
+  copyOrderSize: OrderFilterValues,
+  limitOrderSize: OrderFilterValues,
 }
 
 interface TradeSettingsState {
   buy: TradeSettings;
   sell: TradeSettings;
+  byMaxAmount: boolean;
+  maxAmount: string
 }
 
 interface TradeSettingsContextType {
   settings: TradeSettingsState;
   toggleSetting: (type: 'buy' | 'sell', field: TradeSettingFields) => void;
   updateRangeValues: (type: 'buy' | 'sell', field: 'orderSize' | 'price' | 'amount', value: string, isMin: boolean) => void;
+  OrderSettings: (type: 'buy' | 'sell', field: 'copyOrderSize' | 'limitOrderSize', value: {size?: string, type?: string}) => void;
+  setSettings: Dispatch<SetStateAction<TradeSettingsState>>
 }
 
 interface TradeSettingsProviderProps {
@@ -98,46 +109,7 @@ export const TradeSettingsProvider = ({ children }: TradeSettingsProviderProps) 
     }));
   };
 
-  const startCopyTrading = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_Backend_URI}/api/trade-settings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(settings),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save settings');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error saving settings:', error);
-    }
-  }
-
-
-  const stopCopyTrading = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_Backend_URI}/api/trade-stop`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to stop');
-      }
-
-      console.log(response);
-      return await response.json();
-    } catch (error) {
-      console.error('Error stop:', error);
-    }
-  }
+  
 
 
   return (
@@ -147,9 +119,7 @@ export const TradeSettingsProvider = ({ children }: TradeSettingsProviderProps) 
         setSettings, 
         OrderSettings, 
         toggleSetting,
-        updateRangeValues,
-        startCopyTrading,
-        stopCopyTrading
+        updateRangeValues
       }}
     >
       {children}
