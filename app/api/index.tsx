@@ -1,5 +1,6 @@
 "use client";
 import { Account } from '@/app/Interface/account';
+import { toast } from 'react-toastify';
 
 const startCopyTrading = async (settings: any) => {
     try {
@@ -73,18 +74,22 @@ const saveAccount = async (newAccount: Account) => {
     body: JSON.stringify(newAccount),
   });
   
-  if (!response.ok) throw new Error('Failed to save account');
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error);
+  };
   
-  return await response.json();
+  return data;
 }
 
-const deleteAccount = async (proxyWallet: string, privateKey: string) => {
+const deleteAccount = async (id: string, proxyWallet: string, privateKey: string) => {
   try {
     // Encode parameters for URL safety
     const encodedProxyWallet = encodeURIComponent(proxyWallet);
     const encodedPrivateKey = encodeURIComponent(privateKey);
+    const encodedId = encodeURIComponent(id);
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_Backend_URI}/api/accounts/${encodedProxyWallet}/${encodedPrivateKey}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_Backend_URI}/api/accounts/${encodedId}/${encodedProxyWallet}/${encodedPrivateKey}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -110,11 +115,27 @@ const getAccounts = async (): Promise<Account[]> => {
   return response.json();
 };
 
+const updateAccountStatus = async (id: string, isActive: boolean): Promise<Account> => {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_Backend_URI}/api/accounts/${id}/update`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ isActive }),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to update account status');
+  }
+  return response.json();
+};
+
 export {
     startCopyTrading,
     stopCopyTrading,
     redeemPositions,
     saveAccount,
     deleteAccount,
-    getAccounts
+    getAccounts,
+    updateAccountStatus
 }
