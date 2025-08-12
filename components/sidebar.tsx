@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { BarChart3, Trophy, Users, Crown, HelpCircle, Settings, TrendingUp } from "lucide-react"
+import { BarChart3, Trophy, Users, Crown, HelpCircle, Settings, TrendingUp,  } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -13,6 +13,7 @@ const navigation = [
   // { name: "Ranking", href: "/ranking", icon: Crown },
   // { name: "Support", href: "/support", icon: HelpCircle },
   { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Accounts", href: "/accounts", icon: Users },
 ]
 
 export function Sidebar() {
@@ -48,7 +49,7 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-gray-800 p-4">
+      {/* <div className="border-t border-gray-800 p-4">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
             <span className="text-white font-medium">JD</span>
@@ -58,7 +59,7 @@ export function Sidebar() {
             <p className="text-xs text-gray-400">0x1234...5678</p>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   )
 }
