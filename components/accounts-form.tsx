@@ -9,10 +9,12 @@ import { Eye, EyeOff, Trash2, Play, StopCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from 'react-toastify';
 import { Account } from '@/app/Interface/account';
-import { saveAccount, deleteAccount, getAccounts, updateAccountStatus } from '@/app/api';
+import { saveAccount, deleteAccount, getAccounts, updateAccountStatus, getSettings } from '@/app/api';
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { startCopyTrading, stopCopyTrading } from "@/app/api";
+import { useTradeSettings } from '@/hooks/useTradeSettingContext';
 
 export default function AccountsForm() {
     const [inputShowKey, setInputShowKey] = useState(false);
@@ -21,6 +23,7 @@ export default function AccountsForm() {
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [proxyWallet, setProxyWallet] = useState(process.env.NEXT_PUBLIC_PROXY_WALLET || '');
     const [isInitializing, setIsInitializing] = useState(true);
+    const { settings } = useTradeSettings();
 
     useEffect(() => {
         const init = async () => {
@@ -101,9 +104,7 @@ export default function AccountsForm() {
             ));
 
             // Update database
-            await updateAccountStatus(id, newStatus);
-            
-            toast.success(`Account ${newStatus ? 'started' : 'stopped'} successfully`);
+            await updateAccountStatus(id, newStatus);            
         } catch (error) {
             // Revert on error
             setAccounts(prev => prev.map(acc => 
@@ -120,6 +121,78 @@ export default function AccountsForm() {
                 : account
         ));
     };
+
+    const CopyhandleClick = async (id: string) => 
+      {
+        try {
+          
+          const accountToCopy = accounts.find(acc => acc.id === id);
+          if (!accountToCopy) return;
+
+          const accountSetting = await getSettings(accountToCopy.proxyWallet);
+          
+          const hasBuyConditions = (
+            accountSetting.buy.Filter.byOrderSize || 
+            accountSetting.buy.Filter.bySports || 
+            accountSetting.buy.Filter.byMinMaxAmount || 
+            accountSetting.buy.Filter.byDaysTillEvent || 
+            accountSetting.buy.Filter.byPrice
+          );
+          
+          const hasSellConditions = (
+            accountSetting.sell.Filter.byOrderSize || 
+            accountSetting.sell.Filter.bySports || 
+            accountSetting.sell.Filter.byMinMaxAmount || 
+            accountSetting.sell.Filter.byDaysTillEvent || 
+            accountSetting.sell.Filter.byPrice
+          );
+          
+          const hasCopyOrderConditions = (
+            accountSetting.buy.OrderSize.size || 
+            accountSetting.buy.OrderSize.type || 
+            accountSetting.sell.OrderSize.size || 
+            accountSetting.sell.OrderSize.type
+          );
+          
+          const hasLimitOrderConditions = (
+            accountSetting.buy.Limitation.size || 
+            accountSetting.buy.Limitation.type || 
+            accountSetting.sell.Limitation.size || 
+            accountSetting.sell.Limitation.type
+          );
+    
+    
+          const missingConditions = [];
+          if (!hasBuyConditions) missingConditions.push("buy conditions");
+          if (!hasSellConditions) missingConditions.push("sell conditions");
+          if (!hasCopyOrderConditions) missingConditions.push("copy order conditions");
+          if (!hasLimitOrderConditions) missingConditions.push("limit order conditions");
+    
+          if (missingConditions.length === 0) {
+            await startCopyTrading(accountSetting);
+            toast.success("Monitoring successfully started");
+          } else {
+            toast.error(`Please configure: ${missingConditions.join(", ")}`);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      } 
+      
+      const StophandleClick = async (id: string) => 
+      {
+        try {     
+          
+          const accountToStop = accounts.find(acc => acc.id === id);
+          if (!accountToStop) return;
+
+          await stopCopyTrading(accountToStop.proxyWallet);
+          toast.success("Stop Monitoring successfully");
+          
+        } catch (error) {
+          console.log(error);
+        }
+      } 
 
     if (isInitializing) {
         return (
@@ -250,7 +323,10 @@ export default function AccountsForm() {
                                                     variant="ghost" 
                                                     size="sm" 
                                                     className={`hover:bg-gray-700 ${account.isActive ? "text-red-400 hover:text-red-300" : "text-blue-400 hover:text-blue-300"}`}
-                                                    onClick={() => toggleAccountStatus(account.id)}
+                                                    onClick={() => {
+                                                      toggleAccountStatus(account.id);
+                                                      account.isActive ? StophandleClick(account.id) : CopyhandleClick(account.id)  
+                                                    }}
                                                 >
                                                     {account.isActive ? (
                                                         <>

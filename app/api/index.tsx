@@ -1,6 +1,5 @@
 "use client";
 import { Account } from '@/app/Interface/account';
-import { toast } from 'react-toastify';
 
 const startCopyTrading = async (settings: any) => {
     try {
@@ -23,13 +22,14 @@ const startCopyTrading = async (settings: any) => {
 }
 
 
-const stopCopyTrading = async () => {
+const stopCopyTrading = async (proxyAddress: string) => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_Backend_URI}/api/trade-stop`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        }
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(proxyAddress),
         });
 
         if (!response.ok) {
@@ -54,12 +54,12 @@ const redeemPositions = async (position: any) => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save settings');
+        throw new Error('Failed to redeem position');
       }
 
       return await response.json();
     } catch (error) {
-      console.error('Error saving settings:', error);
+      console.error('Failed to redeem position:', error);
     }
 }
 
@@ -107,6 +107,7 @@ const deleteAccount = async (id: string, proxyWallet: string, privateKey: string
     throw error;
   }
 };
+
 const getAccounts = async (): Promise<Account[]> => {
   const response = await fetch(`${process.env.NEXT_PUBLIC_Backend_URI}/api/accounts`);
   if (!response.ok) {
@@ -130,6 +131,50 @@ const updateAccountStatus = async (id: string, isActive: boolean): Promise<Accou
   return response.json();
 };
 
+const saveSettings = async (settings: any) => {
+
+  const response = await fetch(`${process.env.NEXT_PUBLIC_Backend_URI}/api/accounts/settings`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(settings),
+  });
+  
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error);
+  };
+  
+  return data;
+}
+
+const getSettings = async (proxyAddress: string): Promise<any> => {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_Backend_URI}/api/accounts/settings/${proxyAddress}`);
+  if (!response.ok) {
+      throw new Error('Failed to fetch accounts');
+  }
+  return response.json();
+};
+
+const sellPositions = async (position: any, amount: number) => {
+
+  const response = await fetch(`${process.env.NEXT_PUBLIC_Backend_URI}/api/trade-sell`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({position: position, amount: amount}),
+  });
+  
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error);
+  };
+  
+  return data;
+}
+
 export {
     startCopyTrading,
     stopCopyTrading,
@@ -137,5 +182,8 @@ export {
     saveAccount,
     deleteAccount,
     getAccounts,
-    updateAccountStatus
+    updateAccountStatus,
+    saveSettings,
+    getSettings,
+    sellPositions
 }

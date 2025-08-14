@@ -8,12 +8,15 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useState, useEffect, ChangeEvent } from "react";
-import { getAccounts } from "@/app/api";
+import { getAccounts, saveSettings } from "@/app/api";
 import { Account } from "@/app/Interface/account";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useTradeSettings } from "@/hooks/useTradeSettingContext";
+import { useTradeSettings, defaultSettings } from "@/hooks/useTradeSettingContext";
 import  {FilterToggleProps, SimpleToggleProps, RangeInputsProps, OrderSizeSectionProps, LimitationSectionProps } from "@/app/Interface/settings";
+import { toast } from "react-toastify";
+import { getSettings } from "@/app/api";
+
 
 export function FilterForm() {
   const { settings, toggleSetting, updateRangeValues, OrderSettings, setSettings } = useTradeSettings();
@@ -29,9 +32,6 @@ export function FilterForm() {
       try {
         const loadedAccounts = await getAccounts();
         setAccounts(loadedAccounts);
-        if (loadedAccounts.length > 0) {
-          setSelectedUser(loadedAccounts[0].id);
-        }
       } catch (error) {
         console.error("Failed to load accounts:", error);
         setError("Failed to load users");
@@ -43,6 +43,43 @@ export function FilterForm() {
     fetchAccounts();
   }, []);
 
+  useEffect(() => {
+    if (accounts.length > 0) {
+      onChangeHandler(accounts[0].id);
+    }
+  }, [accounts])
+
+  const onChangeHandler = async (userId: string) => {
+    setSelectedUser(userId);
+    const selectedAccount = accounts.find(account => account.id === userId);
+    if (selectedAccount) {
+      const usersettings = await getSettings(selectedAccount.proxyWallet);
+      
+      if (usersettings) {
+        setSettings({
+          ...usersettings,  
+          proxyAddress: selectedAccount.proxyWallet  
+        });
+      } else {
+        setSettings({
+          ...defaultSettings,  
+          proxyAddress: selectedAccount.proxyWallet
+        });
+      }
+    }
+  }
+
+  const handleSaveSettings = async () => {
+    try {      
+      console.log("settings:", settings);
+      await saveSettings(settings);
+      toast.success("Settings saved successfully");
+    } catch (error) {
+      toast.error(`Failed to save settings`);
+    }
+  }
+
+  
   return (
     <Card className="bg-gray-900 border-gray-700 rounded-xl shadow-lg">
       <CardHeader className="flex flex-row justify-between items-center pb-4">
@@ -50,46 +87,57 @@ export function FilterForm() {
           <CardTitle className="text-white text-2xl font-bold">Filter Settings</CardTitle>
           <p className="text-gray-400 text-sm">Configure your trading preferences</p>
         </div>
-        <div className="w-64">
-          <Select 
-            value={selectedUser}
-            onValueChange={setSelectedUser}
-            disabled={isLoading || accounts.length === 0}
-          >
-            {isLoading ? (
-              <SelectTrigger className="bg-gray-800 text-gray-400 border-gray-700">
-                <SelectValue placeholder="Loading users..." />
-              </SelectTrigger>
-            ) : error ? (
-              <SelectTrigger className="bg-gray-800 text-red-400 border-gray-700">
-                <SelectValue placeholder={error} />
-              </SelectTrigger>
-            ) : accounts.length === 0 ? (
-              <SelectTrigger className="bg-gray-800 text-gray-400 border-gray-700">
-                <SelectValue placeholder="No users available" />
-              </SelectTrigger>
-            ) : (
-              <>
-                <SelectTrigger className="bg-gray-800 text-white border-gray-700 hover:bg-gray-750 focus:ring-0 focus:ring-offset-0 focus:outline-none">
-                  <SelectValue placeholder="Select user" />
+        <div className="flex items-center gap-4">
+          <div className="w-64">
+            <Select 
+              value={selectedUser}
+              onValueChange={onChangeHandler}
+              disabled={isLoading || accounts.length === 0}
+            >
+              {isLoading ? (
+                <SelectTrigger className="bg-gray-800 text-gray-400 border-gray-700">
+                  <SelectValue placeholder="Loading users..." />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                  {accounts.map((account) => (
-                    <SelectItem 
-                      key={account.id} 
-                      value={account.id}
-                      className="hover:bg-gray-700 focus:bg-gray-700"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500" />
-                        <span>User {account.proxyWallet.substring(0, 6)}...{account.proxyWallet.slice(-4)}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </>
-            )}
-          </Select>
+              ) : error ? (
+                <SelectTrigger className="bg-gray-800 text-red-400 border-gray-700">
+                  <SelectValue placeholder={error} />
+                </SelectTrigger>
+              ) : accounts.length === 0 ? (
+                <SelectTrigger className="bg-gray-800 text-gray-400 border-gray-700">
+                  <SelectValue placeholder="No users available" />
+                </SelectTrigger>
+              ) : (
+                <>
+                  <SelectTrigger className="bg-gray-800 text-white border-gray-700 hover:bg-gray-750 focus:ring-0 focus:ring-offset-0 focus:outline-none">
+                    <SelectValue placeholder="Select user" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                    {accounts.map((account) => (
+                      <SelectItem 
+                        key={account.id} 
+                        value={account.id}
+                        className="hover:bg-gray-700 focus:bg-gray-700"                        
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-green-500" />
+                          <span>User {account.proxyWallet.substring(0, 6)}...{account.proxyWallet.slice(-4)}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </>
+              )}
+            </Select>
+          </div>
+          <Button 
+            variant="outline" 
+            className="bg-blue-600 hover:bg-blue-700 text-white border-none"
+            onClick={() => {
+              handleSaveSettings();
+            }}
+          >
+            Save Settings
+          </Button>
         </div>
       </CardHeader>
 
@@ -109,57 +157,57 @@ export function FilterForm() {
             <div className="space-y-5">
               <FilterToggle 
                 label="By Order Size"
-                checked={settings.buy.byOrder}
-                onChange={() => toggleSetting('buy', 'byOrder')}
+                checked={settings.buy.Filter.byOrderSize.isActive}
+                onChange={() => toggleSetting('buy', 'byOrderSize')}
               >
-                {settings.buy.byOrder && (
+                {settings.buy.Filter.byOrderSize.isActive && (
                   <RangeInputs
-                    minValue={settings.buy.orderSize.min || ""}
-                    maxValue={settings.buy.orderSize.max || ""}
-                    onMinChange={(e) => updateRangeValues('buy', 'orderSize', e.target.value, true)}
-                    onMaxChange={(e) => updateRangeValues('buy', 'orderSize', e.target.value, false)}
+                    minValue={settings.buy.Filter.byOrderSize.size.min}
+                    maxValue={settings.buy.Filter.byOrderSize.size.max}
+                    onMinChange={(e) => updateRangeValues('buy', 'byOrderSize', e.target.value, true)}
+                    onMaxChange={(e) => updateRangeValues('buy', 'byOrderSize', e.target.value, false)}
                   />
                 )}
               </FilterToggle>
 
               <FilterToggle 
                 label="By Price"
-                checked={settings.buy.byPrice}
+                checked={settings.buy.Filter.byPrice.isActive}
                 onChange={() => toggleSetting('buy', 'byPrice')}
               >
-                {settings.buy.byPrice && (
+                {settings.buy.Filter.byPrice.isActive && (
                   <RangeInputs
-                    minValue={settings.buy.price.min || ""}
-                    maxValue={settings.buy.price.max || ""}
-                    onMinChange={(e) => updateRangeValues('buy', 'price', e.target.value, true)}
-                    onMaxChange={(e) => updateRangeValues('buy', 'price', e.target.value, false)}
+                    minValue={settings.buy.Filter.byPrice.size.min}
+                    maxValue={settings.buy.Filter.byPrice.size.max}
+                    onMinChange={(e) => updateRangeValues('buy', 'byPrice', e.target.value, true)}
+                    onMaxChange={(e) => updateRangeValues('buy', 'byPrice', e.target.value, false)}
                   />
                 )}
               </FilterToggle>
 
               <SimpleToggle 
                 label="By Sport"
-                checked={settings.buy.byCategory}
-                onChange={() => toggleSetting('buy', 'byCategory')}
+                checked={settings.buy.Filter.bySports}
+                onChange={() => toggleSetting('buy', 'bySports')}
               />
 
               <SimpleToggle 
                 label="By Days till the Event"
-                checked={settings.buy.byTillDayEvent}
-                onChange={() => toggleSetting('buy', 'byTillDayEvent')}
+                checked={settings.buy.Filter.byDaysTillEvent}
+                onChange={() => toggleSetting('buy', 'byDaysTillEvent')}
               />
 
               <FilterToggle 
                 label="By Min/Max Trigger Amount"
-                checked={settings.buy.byAmount}
-                onChange={() => toggleSetting('buy', 'byAmount')}
+                checked={settings.buy.Filter.byMinMaxAmount.isActive}
+                onChange={() => toggleSetting('buy', 'byMinMaxAmount')}
               >
-                {settings.buy.byAmount && (
+                {settings.buy.Filter.byMinMaxAmount.isActive && (
                   <RangeInputs
-                    minValue={settings.buy.amount.min || ""}
-                    maxValue={settings.buy.amount.max || ""}
-                    onMinChange={(e) => updateRangeValues('buy', 'amount', e.target.value, true)}
-                    onMaxChange={(e) => updateRangeValues('buy', 'amount', e.target.value, false)}
+                    minValue={settings.buy.Filter.byMinMaxAmount.size.min}
+                    maxValue={settings.buy.Filter.byMinMaxAmount.size.max}
+                    onMinChange={(e) => updateRangeValues('buy', 'byMinMaxAmount', e.target.value, true)}
+                    onMaxChange={(e) => updateRangeValues('buy', 'byMinMaxAmount', e.target.value, false)}
                   />
                 )}
               </FilterToggle>
@@ -169,72 +217,69 @@ export function FilterForm() {
           {/* Sell Filter Section */}
           <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700">
             <div className="flex items-center gap-3 mb-6">
-              <Badge variant="secondary" className="bg-red-500/20 text-red-400">
+              <Badge variant="secondary" className="bg-green-500/20 text-green-400">
                 Sell
               </Badge>
               <h3 className="text-white text-lg font-semibold">Sell Filter Settings</h3>
             </div>
             
             <div className="space-y-5">
-              
               <FilterToggle 
                 label="By Order Size"
-                checked={settings.sell.byOrder}
-                onChange={() => toggleSetting('sell', 'byOrder')}
+                checked={settings.sell.Filter.byOrderSize.isActive}
+                onChange={() => toggleSetting('sell', 'byOrderSize')}
               >
-                {settings.sell.byOrder && (
+                {settings.sell.Filter.byOrderSize.isActive && (
                   <RangeInputs
-                    minValue={settings.sell.orderSize.min || ""}
-                    maxValue={settings.sell.orderSize.max || ""}
-                    onMinChange={(e) => updateRangeValues('sell', 'orderSize', e.target.value, true)}
-                    onMaxChange={(e) => updateRangeValues('sell', 'orderSize', e.target.value, false)}
+                    minValue={settings.sell.Filter.byOrderSize.size.min}
+                    maxValue={settings.sell.Filter.byOrderSize.size.max}
+                    onMinChange={(e) => updateRangeValues('sell', 'byOrderSize', e.target.value, true)}
+                    onMaxChange={(e) => updateRangeValues('sell', 'byOrderSize', e.target.value, false)}
                   />
                 )}
               </FilterToggle>
 
               <FilterToggle 
                 label="By Price"
-                checked={settings.sell.byPrice}
+                checked={settings.sell.Filter.byPrice.isActive}
                 onChange={() => toggleSetting('sell', 'byPrice')}
               >
-                {settings.sell.byPrice && (
+                {settings.sell.Filter.byPrice.isActive && (
                   <RangeInputs
-                    minValue={settings.sell.price.min || ""}
-                    maxValue={settings.sell.price.max || ""}
-                    onMinChange={(e) => updateRangeValues('sell', 'price', e.target.value, true)}
-                    onMaxChange={(e) => updateRangeValues('sell', 'price', e.target.value, false)}
+                    minValue={settings.sell.Filter.byPrice.size.min}
+                    maxValue={settings.sell.Filter.byPrice.size.max}
+                    onMinChange={(e) => updateRangeValues('sell', 'byPrice', e.target.value, true)}
+                    onMaxChange={(e) => updateRangeValues('sell', 'byPrice', e.target.value, false)}
                   />
                 )}
               </FilterToggle>
 
               <SimpleToggle 
                 label="By Sport"
-                checked={settings.sell.byCategory}
-                onChange={() => toggleSetting('sell', 'byCategory')}
+                checked={settings.sell.Filter.bySports}
+                onChange={() => toggleSetting('sell', 'bySports')}
               />
 
               <SimpleToggle 
                 label="By Days till the Event"
-                checked={settings.sell.byTillDayEvent}
-                onChange={() => toggleSetting('sell', 'byTillDayEvent')}
+                checked={settings.sell.Filter.byDaysTillEvent}
+                onChange={() => toggleSetting('sell', 'byDaysTillEvent')}
               />
 
               <FilterToggle 
                 label="By Min/Max Trigger Amount"
-                checked={settings.sell.byAmount}
-                onChange={() => toggleSetting('sell', 'byAmount')}
+                checked={settings.sell.Filter.byMinMaxAmount.isActive}
+                onChange={() => toggleSetting('sell', 'byMinMaxAmount')}
               >
-                {settings.sell.byAmount && (
+                {settings.sell.Filter.byMinMaxAmount.isActive && (
                   <RangeInputs
-                    minValue={settings.sell.amount.min || ""}
-                    maxValue={settings.sell.amount.max || ""}
-                    onMinChange={(e) => updateRangeValues('sell', 'amount', e.target.value, true)}
-                    onMaxChange={(e) => updateRangeValues('sell', 'amount', e.target.value, false)}
+                    minValue={settings.sell.Filter.byMinMaxAmount.size.min}
+                    maxValue={settings.sell.Filter.byMinMaxAmount.size.max}
+                    onMinChange={(e) => updateRangeValues('sell', 'byMinMaxAmount', e.target.value, true)}
+                    onMaxChange={(e) => updateRangeValues('sell', 'byMinMaxAmount', e.target.value, false)}
                   />
                 )}
               </FilterToggle>
-
-              {/* ... other sell filter toggles ... */}
             </div>
           </div>
         </div>
@@ -246,18 +291,18 @@ export function FilterForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <OrderSizeSection 
               type="buy"
-              size={settings.buy.copyOrderSize.size || ""}
-              sizeType={settings.buy.copyOrderSize.type || ""}
-              onSizeChange={(e) => OrderSettings('buy', 'copyOrderSize', {size: e.target.value})}
-              onTypeChange={(type) => OrderSettings('buy', 'copyOrderSize', {type})}
+              size={settings.buy.OrderSize.size}
+              sizeType={settings.buy.OrderSize.type}
+              onSizeChange={(e) => OrderSettings('buy', 'OrderSize', {size: e.target.value})}
+              onTypeChange={(type) => OrderSettings('buy', 'OrderSize', {type})}
             />
             
             <OrderSizeSection 
               type="sell"
-              size={settings.sell.copyOrderSize.size || ""}
-              sizeType={settings.sell.copyOrderSize.type || ""}
-              onSizeChange={(e) => OrderSettings('sell', 'copyOrderSize', {size: e.target.value})}
-              onTypeChange={(type) => OrderSettings('sell', 'copyOrderSize', {type})}
+              size={settings.sell.OrderSize.size}
+              sizeType={settings.sell.OrderSize.type}
+              onSizeChange={(e) => OrderSettings('sell', 'OrderSize', {size: e.target.value})}
+              onTypeChange={(type) => OrderSettings('sell', 'OrderSize', {type})}
             />
           </div>
         </div>
@@ -269,33 +314,45 @@ export function FilterForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <LimitationSection 
               type="buy"
-              size={settings.buy.limitOrderSize.size || ""}
-              limitType={settings.buy.limitOrderSize.type || ""}
-              onSizeChange={(e) => OrderSettings('buy', 'limitOrderSize', {size: e.target.value})}
-              onTypeChange={(type) => OrderSettings('buy', 'limitOrderSize', {type})}
+              size={settings.buy.Limitation.size}
+              limitType={settings.buy.Limitation.type}
+              onSizeChange={(e) => OrderSettings('buy', 'Limitation', {size: e.target.value})}
+              onTypeChange={(type) => OrderSettings('buy', 'Limitation', {type})}
             />
             
             <LimitationSection 
               type="sell"
-              size={settings.sell.limitOrderSize.size || ""}
-              limitType={settings.sell.limitOrderSize.type || ""}
-              onSizeChange={(e) => OrderSettings('sell', 'limitOrderSize', {size: e.target.value})}
-              onTypeChange={(type) => OrderSettings('sell', 'limitOrderSize', {type})}
+              size={settings.sell.Limitation.size}
+              limitType={settings.sell.Limitation.type}
+              onSizeChange={(e) => OrderSettings('sell', 'Limitation', {size: e.target.value})}
+              onTypeChange={(type) => OrderSettings('sell', 'Limitation', {type})}
             />
           </div>
           
           <div className="mt-6 flex items-center gap-4">
             <Switch
-              checked={settings.byMaxAmount}
-              onCheckedChange={(checked) => setSettings(prev => ({...prev, byMaxAmount: checked}))}
+              checked={settings.maxAmount.isActive}
+              onCheckedChange={(checked) => setSettings(prev => ({
+                ...prev,
+                maxAmount: {
+                  ...prev.maxAmount,
+                  isActive: checked
+                }
+              }))}
               className="data-[state=checked]:bg-blue-500"
             />
             <div className="flex items-center gap-3">
               <Label className="text-white">Max Amount per Market:</Label>
               <Input 
                 className="w-40 bg-gray-700 border-gray-600 text-white"
-                value={settings.maxAmount}
-                onChange={(e) => setSettings(prev => ({...prev, maxAmount: e.target.value}))}
+                value={settings.maxAmount.amount}
+                onChange={(e) => setSettings(prev => ({
+                  ...prev,
+                  maxAmount: {
+                    ...prev.maxAmount,
+                    amount: e.target.value
+                  }
+                }))}
               />
             </div>
           </div>

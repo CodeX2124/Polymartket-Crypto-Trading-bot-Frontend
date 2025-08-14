@@ -8,12 +8,8 @@ import { usePathname } from "next/navigation"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
-  // { name: "Sports Markets", href: "/sports-markets", icon: Trophy },
-  // { name: "Your Masters", href: "/masters", icon: Users },
-  // { name: "Ranking", href: "/ranking", icon: Crown },
-  // { name: "Support", href: "/support", icon: HelpCircle },
-  { name: "Settings", href: "/settings", icon: Settings },
   { name: "Accounts", href: "/accounts", icon: Users },
+  { name: "Settings", href: "/settings", icon: Settings },
 ]
 
 export function Sidebar() {
@@ -48,18 +44,6 @@ export function Sidebar() {
           )
         })}
       </nav>
-
-      {/* <div className="border-t border-gray-800 p-4">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
-            <span className="text-white font-medium">JD</span>
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-white">Connected</p>
-            <p className="text-xs text-gray-400">0x1234...5678</p>
-          </div>
-        </div>
-      </div> */}
     </div>
   )
 }
