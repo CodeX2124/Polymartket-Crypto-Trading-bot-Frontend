@@ -21,7 +21,8 @@ export default function AccountsForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [privateKey, setPrivateKey] = useState('sk_live_••••••••••••••••');
     const [accounts, setAccounts] = useState<Account[]>([]);
-    const [proxyWallet, setProxyWallet] = useState(process.env.NEXT_PUBLIC_PROXY_WALLET || '');
+    const [proxyWallet, setProxyWallet] = useState('');
+    const [targetWallet, setTargetWallet] = useState('');
     const [isInitializing, setIsInitializing] = useState(true);
     const { settings } = useTradeSettings();
 
@@ -43,7 +44,7 @@ export default function AccountsForm() {
     }, []);
 
     const addAccount = async () => {
-        if (!proxyWallet || !privateKey) {
+        if (!proxyWallet || !privateKey || !targetWallet) {
             toast.error('Please fill all fields');
             return;
         }
@@ -54,6 +55,7 @@ export default function AccountsForm() {
                 id: Date.now().toString(),
                 proxyWallet,
                 privateKey,
+                targetWallet,
                 isActive: false,
                 showKey: false
             };       
@@ -76,7 +78,7 @@ export default function AccountsForm() {
 
             const response = await deleteAccount(
                 accountToDelete.id, 
-                accountToDelete.proxyWallet, 
+                accountToDelete.proxyWallet,  
                 accountToDelete.privateKey
             );
 
@@ -131,6 +133,11 @@ export default function AccountsForm() {
 
           const accountSetting = await getSettings(accountToCopy.proxyWallet);
           
+          if (!accountSetting){
+            toast.error("Please fill filter settings");
+            return;
+          }
+
           const hasBuyConditions = (
             accountSetting.buy.Filter.byOrderSize || 
             accountSetting.buy.Filter.bySports || 
@@ -160,16 +167,18 @@ export default function AccountsForm() {
             accountSetting.sell.Limitation.size || 
             accountSetting.sell.Limitation.type
           );
-    
-    
+          
+          
           const missingConditions = [];
           if (!hasBuyConditions) missingConditions.push("buy conditions");
           if (!hasSellConditions) missingConditions.push("sell conditions");
           if (!hasCopyOrderConditions) missingConditions.push("copy order conditions");
           if (!hasLimitOrderConditions) missingConditions.push("limit order conditions");
-    
+          
           if (missingConditions.length === 0) {
+            
             await startCopyTrading(accountSetting);
+            toggleAccountStatus(id);
             toast.success("Monitoring successfully started");
           } else {
             toast.error(`Please configure: ${missingConditions.join(", ")}`);
@@ -187,6 +196,7 @@ export default function AccountsForm() {
           if (!accountToStop) return;
 
           await stopCopyTrading(accountToStop.proxyWallet);
+          toggleAccountStatus(id);
           toast.success("Stop Monitoring successfully");
           
         } catch (error) {
@@ -229,6 +239,16 @@ export default function AccountsForm() {
                                 type="text"
                                 value={proxyWallet}
                                 onChange={(e) => setProxyWallet(e.target.value)}
+                                className="bg-gray-800 border-gray-700 text-white hover:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                                placeholder="0x..."
+                            />
+                        </div>
+                        <div>
+                            <Label className="text-gray-300 mb-2 block">Target Wallet Address</Label>
+                            <Input
+                                type="text"
+                                value={targetWallet}
+                                onChange={(e) => setTargetWallet(e.target.value)}
                                 className="bg-gray-800 border-gray-700 text-white hover:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
                                 placeholder="0x..."
                             />
@@ -324,7 +344,7 @@ export default function AccountsForm() {
                                                     size="sm" 
                                                     className={`hover:bg-gray-700 ${account.isActive ? "text-red-400 hover:text-red-300" : "text-blue-400 hover:text-blue-300"}`}
                                                     onClick={() => {
-                                                      toggleAccountStatus(account.id);
+                                                      // toggleAccountStatus(account.id);
                                                       account.isActive ? StophandleClick(account.id) : CopyhandleClick(account.id)  
                                                     }}
                                                 >

@@ -18,8 +18,6 @@ import { Account } from "@/app/Interface/account";
 import { SellModal } from "./sell-modal"
 import { sellPositions } from "@/app/api"
 
-const PROXY_WALLET = process.env.NEXT_PUBLIC_PROXY_WALLET;
-
 export function PositionsActivitiesCard() {
   const [activeTab, setActiveTab] = useState<"positions" | "activities">("positions")
   const [activePositions, setActivePostions] = useState<UserPositionInterface[]>([])
@@ -104,7 +102,7 @@ export function PositionsActivitiesCard() {
         setIsLoading(false);
         return;
       }
-      
+
       setIsLoading(true);
       let [activePositions, activities] = await Promise.all([
         fetchData(`https://data-api.polymarket.com/positions?user=${walletAddress}`),
