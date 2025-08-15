@@ -139,19 +139,19 @@ export default function AccountsForm() {
           }
 
           const hasBuyConditions = (
-            accountSetting.buy.Filter.byOrderSize || 
+            accountSetting.buy.Filter.byOrderSize.isActive || 
             accountSetting.buy.Filter.bySports || 
-            accountSetting.buy.Filter.byMinMaxAmount || 
+            accountSetting.buy.Filter.byMinMaxAmount.isActive || 
             accountSetting.buy.Filter.byDaysTillEvent || 
-            accountSetting.buy.Filter.byPrice
+            accountSetting.buy.Filter.byPrice.isActive
           );
           
           const hasSellConditions = (
-            accountSetting.sell.Filter.byOrderSize || 
+            accountSetting.sell.Filter.byOrderSize.isActive || 
             accountSetting.sell.Filter.bySports || 
-            accountSetting.sell.Filter.byMinMaxAmount || 
+            accountSetting.sell.Filter.byMinMaxAmount.isActive || 
             accountSetting.sell.Filter.byDaysTillEvent || 
-            accountSetting.sell.Filter.byPrice
+            accountSetting.sell.Filter.byPrice.isActive
           );
           
           const hasCopyOrderConditions = (

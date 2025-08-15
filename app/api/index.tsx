@@ -24,12 +24,13 @@ const startCopyTrading = async (settings: any) => {
 
 const stopCopyTrading = async (proxyAddress: string) => {
     try {
+        console.log(proxyAddress);
         const response = await fetch(`${process.env.NEXT_PUBLIC_Backend_URI}/api/trade-stop`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
           },
-          body: JSON.stringify(proxyAddress),
+          body: JSON.stringify({proxyAddress}),
         });
 
         if (!response.ok) {
