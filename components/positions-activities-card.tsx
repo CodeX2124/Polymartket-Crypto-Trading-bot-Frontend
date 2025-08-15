@@ -17,6 +17,7 @@ import { getAccounts, saveSettings } from "@/app/api";
 import { Account } from "@/app/Interface/account";
 import { SellModal } from "./sell-modal"
 import { sellPositions } from "@/app/api"
+import { useWallet } from "@/hooks/useWalletContext"
 
 export function PositionsActivitiesCard() {
   const [activeTab, setActiveTab] = useState<"positions" | "activities">("positions")
@@ -27,10 +28,9 @@ export function PositionsActivitiesCard() {
   const [isLoading, setIsLoading] = useState(true);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedUser, setSelectedUser] = useState<string>("");
-  const [walletAddress, setWalletAddress] = useState<string>("");
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(true);
   const [accountsError, setAccountsError] = useState<string | null>(null);
-
+  const { walletAddress, setWalletAddress } = useWallet();
   const [sellModalOpen, setSellModalOpen] = useState(false)
   const [selectedPosition, setSelectedPosition] = useState<UserPositionInterface | null>(null)
 
@@ -120,7 +120,7 @@ export function PositionsActivitiesCard() {
 
   useEffect(() => {
     fetchPostion();
-    const interval = setInterval(fetchPostion, 60000); // Refresh every 10 seconds
+    const interval = setInterval(fetchPostion, 30000); // Refresh every 10 seconds
     
     return () => {
       clearInterval(interval);
@@ -387,9 +387,9 @@ export function PositionsActivitiesCard() {
                     </div>
                     <p className="text-sm text-gray-400 mt-1 truncate">{activity.title}</p>
                     <div className="flex items-center gap-3 mt-2">
-                      <Badge variant="outline" className="border-gray-600 text-gray-300 text-xs">
+                      {/* <Badge variant="outline" className="border-gray-600 text-gray-300 text-xs">
                         {new Date(activity.timestamp).toLocaleString()}
-                      </Badge>
+                      </Badge> */}
                       <Badge variant="outline" className="border-gray-600 text-gray-300 text-xs">
                         {"Sports"}
                       </Badge>

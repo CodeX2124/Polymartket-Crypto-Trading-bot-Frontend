@@ -5,6 +5,7 @@ import "./globals.css"
 import { Providers } from './provider';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { UserProvider } from "@/hooks/useWalletContext";
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -35,7 +36,9 @@ export default function RootLayout({
             pauseOnHover
             theme="colored"
           />
-          {children}
+          <UserProvider>
+            {children}
+          </UserProvider>
         </Providers>
       </body>
     </html>
