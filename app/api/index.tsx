@@ -158,14 +158,14 @@ const getSettings = async (proxyAddress: string): Promise<any> => {
   return response.json();
 };
 
-const sellPositions = async (position: any, amount: number) => {
+const sellPositions = async (position: any, amount: number, filterData: any) => {
 
   const response = await fetch(`${process.env.NEXT_PUBLIC_Backend_URI}/api/trade-sell`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({position: position, amount: amount}),
+    body: JSON.stringify({position: position, amount: amount, filterData: filterData}),
   });
   
   const data = await response.json();

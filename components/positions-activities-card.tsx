@@ -18,6 +18,7 @@ import { Account } from "@/app/Interface/account";
 import { SellModal } from "./sell-modal"
 import { sellPositions } from "@/app/api"
 import { useWallet } from "@/hooks/useWalletContext"
+import { getSettings } from "@/app/api"
 
 export function PositionsActivitiesCard() {
   const [activeTab, setActiveTab] = useState<"positions" | "activities">("positions")
@@ -131,8 +132,9 @@ export function PositionsActivitiesCard() {
     if (!selectedPosition) return
     
     try {
-      // Implement your sell logic here
-      const sell = await sellPositions(selectedPosition, amount);
+      
+      const filterData = await getSettings(selectedPosition.proxyWallet);
+      const sell = await sellPositions(selectedPosition, amount, filterData);
       if(sell.success){      
 
         toast.success(`Sold ${amount.toFixed(2)} shares of ${selectedPosition.title}`)
