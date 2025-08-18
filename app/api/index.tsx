@@ -111,6 +111,7 @@ const deleteAccount = async (id: string, proxyWallet: string, privateKey: string
 
 const getAccounts = async (): Promise<Account[]> => {
   const response = await fetch(`${process.env.NEXT_PUBLIC_Backend_URI}/api/accounts`);
+  console.log(response);
   if (!response.ok) {
       throw new Error('Failed to fetch accounts');
   }

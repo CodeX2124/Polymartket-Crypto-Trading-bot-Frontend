@@ -32,7 +32,11 @@ export function FilterForm() {
       setError(null);
       try {
         const loadedAccounts = await getAccounts();
-        setAccounts(loadedAccounts);
+        if(loadedAccounts){
+          setAccounts(loadedAccounts);
+        } else {
+          toast.error("No account exist")
+        }
       } catch (error) {
         console.error("Failed to load accounts:", error);
         setError("Failed to load users");

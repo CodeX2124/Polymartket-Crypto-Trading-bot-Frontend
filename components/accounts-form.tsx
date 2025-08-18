@@ -30,10 +30,14 @@ export default function AccountsForm() {
         const init = async () => {
             try {
                 const loadedAccounts = await getAccounts();
-                setAccounts(loadedAccounts.map(account => ({
-                    ...account,
-                    showKey: false
-                })));
+                if(loadedAccounts){
+                  setAccounts(loadedAccounts.map(account => ({
+                      ...account,
+                      showKey: false
+                  })));
+                } else {
+                  toast.error('No accounts exist')
+                }
             } catch (error) {
                 toast.error('Failed to load accounts');
             } finally {
