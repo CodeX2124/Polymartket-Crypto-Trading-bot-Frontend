@@ -24,8 +24,14 @@ interface FilterSettings {
     isActive: boolean;
     size: RangeValues;
   };
-  bySports: boolean;
-  byDaysTillEvent: boolean;
+  bySports: {
+    isActive: boolean;
+    sportsList: string[];
+  };
+  byDaysTillEvent: {
+    isActive: boolean;
+    size: RangeValues;
+  };
   byMinMaxAmount: {
     isActive: boolean;
     size: RangeValues;
@@ -51,7 +57,7 @@ interface TradeSettingsState {
 interface TradeSettingsContextType {
   settings: TradeSettingsState;
   toggleSetting: (type: 'buy' | 'sell', field: TradeSettingFields) => void;
-  updateRangeValues: (type: 'buy' | 'sell', field: 'byOrderSize' | 'byPrice' | 'byMinMaxAmount', value: string, isMin: boolean) => void;
+  updateRangeValues: (type: 'buy' | 'sell', field: 'byOrderSize' | 'byPrice' | 'byMinMaxAmount' | 'byDaysTillEvent', value: string, isMin: boolean) => void;
   OrderSettings: (type: 'buy' | 'sell', field: 'OrderSize' | 'Limitation', value: Partial<OrderLimitationSettings>) => void;
   setSettings: Dispatch<SetStateAction<TradeSettingsState>>;
 }
@@ -74,8 +80,14 @@ const defaultTradeSettings: TradeSettings = {
       isActive: false,
       size: { min: '', max: '' }
     },
-    bySports: false,
-    byDaysTillEvent: false,
+    bySports: {
+      isActive: false,
+      sportsList: []
+    },
+    byDaysTillEvent: {
+      isActive: false,
+      size: { min: '', max: '' }
+    },
     byMinMaxAmount: {
       isActive: false,
       size: { min: '', max: '' }
@@ -123,41 +135,28 @@ export const TradeSettingsProvider = ({ children }: TradeSettingsProviderProps) 
   };
 
   const toggleSetting = (type: 'buy' | 'sell', field: TradeSettingFields) => {
-      setSettings(prev => {
-          const currentTypeSettings = prev[type];
-          
-          if (field === 'bySports' || field === 'byDaysTillEvent') {
-              return {
-                  ...prev,
-                  [type]: {
-                      ...currentTypeSettings,
-                      Filter: {
-                          ...currentTypeSettings.Filter,
-                          [field]: !currentTypeSettings.Filter[field]
-                      }
-                  }
-              };
-          } else {
-              return {
-                  ...prev,
-                  [type]: {
-                      ...currentTypeSettings,
-                      Filter: {
-                          ...currentTypeSettings.Filter,
-                          [field]: {
-                              ...currentTypeSettings.Filter[field],
-                              isActive: !currentTypeSettings.Filter[field].isActive
-                          }
-                      }
-                  }
-              };
+    setSettings(prev => {
+      const currentTypeSettings = prev[type];
+      
+      return {
+        ...prev,
+        [type]: {
+          ...currentTypeSettings,
+          Filter: {
+            ...currentTypeSettings.Filter,
+            [field]: {
+              ...currentTypeSettings.Filter[field],
+              isActive: !currentTypeSettings.Filter[field].isActive
+            }
           }
-      });
+        }
+      };
+    });
   };
 
   const updateRangeValues = (
     type: 'buy' | 'sell',
-    field: 'byOrderSize' | 'byPrice' | 'byMinMaxAmount',
+    field: 'byOrderSize' | 'byPrice' | 'byMinMaxAmount' | 'byDaysTillEvent',
     value: string,
     isMin: boolean
   ) => {

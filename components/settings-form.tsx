@@ -13,10 +13,11 @@ import { Account } from "@/app/Interface/account";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useTradeSettings, defaultSettings } from "@/hooks/useTradeSettingContext";
-import  {FilterToggleProps, SimpleToggleProps, RangeInputsProps, OrderSizeSectionProps, LimitationSectionProps } from "@/app/Interface/settings";
+import { FilterToggleProps, SimpleToggleProps, RangeInputsProps, OrderSizeSectionProps, LimitationSectionProps, SportsToggleProps } from "@/app/Interface/settings";
 import { toast } from "react-toastify";
 import { getSettings } from "@/app/api";
 
+const sportsList = ["MLB", "NBA", "NHL", "NFL", "Soccer", "Tennis", "UFC", "Boxing"];
 
 export function FilterForm() {
   const { settings, toggleSetting, updateRangeValues, OrderSettings, setSettings } = useTradeSettings();
@@ -69,6 +70,27 @@ export function FilterForm() {
     }
   }
 
+  const handleSportToggle = (side: 'buy' | 'sell', sport: string) => {
+    const currentSports = settings[side].Filter.bySports.sportsList;
+    const newSports = currentSports.includes(sport)
+      ? currentSports.filter(s => s !== sport)
+      : [...currentSports, sport];
+    
+    setSettings(prev => ({
+      ...prev,
+      [side]: {
+        ...prev[side],
+        Filter: {
+          ...prev[side].Filter,
+          bySports: {
+            ...prev[side].Filter.bySports,
+            sportsList: newSports
+          }
+        }
+      }
+    }));
+  };
+
   const handleSaveSettings = async () => {
     try {      
       console.log("settings:", settings);
@@ -79,7 +101,6 @@ export function FilterForm() {
     }
   }
 
-  
   return (
     <Card className="bg-gray-900 border-gray-700 rounded-xl shadow-lg">
       <CardHeader className="flex flex-row justify-between items-center pb-4">
@@ -132,9 +153,7 @@ export function FilterForm() {
           <Button 
             variant="outline" 
             className="bg-blue-600 hover:bg-blue-700 text-white border-none"
-            onClick={() => {
-              handleSaveSettings();
-            }}
+            onClick={handleSaveSettings}
           >
             Save Settings
           </Button>
@@ -185,17 +204,29 @@ export function FilterForm() {
                 )}
               </FilterToggle>
 
-              <SimpleToggle 
+              <SportsToggle 
                 label="By Sport"
-                checked={settings.buy.Filter.bySports}
+                checked={settings.buy.Filter.bySports.isActive}
                 onChange={() => toggleSetting('buy', 'bySports')}
+                sports={sportsList}
+                selectedSports={settings.buy.Filter.bySports.sportsList}
+                onSportToggle={(sport) => handleSportToggle('buy', sport)}
               />
 
-              <SimpleToggle 
+              <FilterToggle 
                 label="By Days till the Event"
-                checked={settings.buy.Filter.byDaysTillEvent}
+                checked={settings.buy.Filter.byDaysTillEvent.isActive}
                 onChange={() => toggleSetting('buy', 'byDaysTillEvent')}
-              />
+              >
+                {settings.buy.Filter.byDaysTillEvent.isActive && (
+                  <RangeInputs
+                    minValue={settings.buy.Filter.byDaysTillEvent.size.min}
+                    maxValue={settings.buy.Filter.byDaysTillEvent.size.max}
+                    onMinChange={(e) => updateRangeValues('buy', 'byDaysTillEvent', e.target.value, true)}
+                    onMaxChange={(e) => updateRangeValues('buy', 'byDaysTillEvent', e.target.value, false)}
+                  />
+                )}
+              </FilterToggle>
 
               <FilterToggle 
                 label="By Min/Max Trigger Amount"
@@ -254,17 +285,29 @@ export function FilterForm() {
                 )}
               </FilterToggle>
 
-              <SimpleToggle 
+              <SportsToggle 
                 label="By Sport"
-                checked={settings.sell.Filter.bySports}
+                checked={settings.sell.Filter.bySports.isActive}
                 onChange={() => toggleSetting('sell', 'bySports')}
+                sports={sportsList}
+                selectedSports={settings.sell.Filter.bySports.sportsList}
+                onSportToggle={(sport) => handleSportToggle('sell', sport)}
               />
 
-              <SimpleToggle 
+              <FilterToggle 
                 label="By Days till the Event"
-                checked={settings.sell.Filter.byDaysTillEvent}
+                checked={settings.sell.Filter.byDaysTillEvent.isActive}
                 onChange={() => toggleSetting('sell', 'byDaysTillEvent')}
-              />
+              >
+                {settings.sell.Filter.byDaysTillEvent.isActive && (
+                  <RangeInputs
+                    minValue={settings.sell.Filter.byDaysTillEvent.size.min}
+                    maxValue={settings.sell.Filter.byDaysTillEvent.size.max}
+                    onMinChange={(e) => updateRangeValues('sell', 'byDaysTillEvent', e.target.value, true)}
+                    onMaxChange={(e) => updateRangeValues('sell', 'byDaysTillEvent', e.target.value, false)}
+                  />
+                )}
+              </FilterToggle>
 
               <FilterToggle 
                 label="By Min/Max Trigger Amount"
@@ -339,7 +382,11 @@ export function FilterForm() {
                   isActive: checked
                 }
               }))}
-              className="data-[state=checked]:bg-blue-500"
+              className="
+                data-[state=unchecked]:bg-gray-500 
+                data-[state=checked]:bg-yellow-200
+                transition-colors duration-200
+              "
             />
             <div className="flex items-center gap-3">
               <Label className="text-white">Max Amount per Market:</Label>
@@ -362,31 +409,75 @@ export function FilterForm() {
   );
 }
 
-
-
-// Update the component implementations with proper typing
 const FilterToggle = ({ label, checked, onChange, children }: FilterToggleProps) => (
   <div className="space-y-2">
     <div className="flex items-center gap-3">
-      <Switch 
-        checked={checked} 
-        onCheckedChange={onChange}
-        className="data-[state=checked]:bg-blue-500"
-      />
+    <Switch 
+      checked={checked} 
+      onCheckedChange={onChange}
+      className="
+        data-[state=unchecked]:bg-gray-500 
+        data-[state=checked]:bg-yellow-200
+        transition-colors duration-200
+      "
+    />
       <Label className="text-gray-300">{label}</Label>
     </div>
     {children}
   </div>
 );
 
-const SimpleToggle = ({ label, checked, onChange }: SimpleToggleProps) => (
-  <div className="flex items-center gap-3">
+// const SimpleToggle = ({ label, checked, onChange }: SimpleToggleProps) => (
+//   <div className="flex items-center gap-3">
+//     <Switch 
+//       checked={checked} 
+//       onCheckedChange={onChange}
+//       className="data-[state=checked]:bg-blue-500"
+//     />
+//     <Label className="text-gray-300">{label}</Label>
+//   </div>
+// );
+
+const SportsToggle = ({ 
+  label, 
+  checked, 
+  onChange, 
+  sports, 
+  selectedSports, 
+  onSportToggle 
+}: SportsToggleProps) => (
+  <div className="space-y-2">
+    <div className="flex items-center gap-3">
     <Switch 
       checked={checked} 
       onCheckedChange={onChange}
-      className="data-[state=checked]:bg-blue-500"
+      className="
+        data-[state=unchecked]:bg-gray-500 
+        data-[state=checked]:bg-yellow-200
+        transition-colors duration-200
+      "
     />
-    <Label className="text-gray-300">{label}</Label>
+      <Label className="text-gray-300">{label}</Label>
+    </div>
+    
+    {checked && (
+      <div className="grid grid-cols-2 gap-2 pl-10">
+        {sports.map((sport) => (
+          <div key={sport} className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id={`sport-${sport}`}
+              checked={selectedSports.includes(sport)}
+              onChange={() => onSportToggle(sport)}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <Label htmlFor={`sport-${sport}`} className="text-gray-300">
+              {sport}
+            </Label>
+          </div>
+        ))}
+      </div>
+    )}
   </div>
 );
 

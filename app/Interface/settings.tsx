@@ -35,3 +35,12 @@ export interface LimitationSectionProps {
     onSizeChange: (e: ChangeEvent<HTMLInputElement>) => void;
     onTypeChange: (type: string) => void;
 }
+
+export interface SportsToggleProps {
+    label: string;
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+    sports: string[];
+    selectedSports: string[];
+    onSportToggle: (sport: string) => void;
+}
