@@ -32,11 +32,9 @@ export function FilterForm() {
       setError(null);
       try {
         const loadedAccounts = await getAccounts();
-        if(loadedAccounts){
+        if(loadedAccounts.length > 0){
           setAccounts(loadedAccounts);
-        } else {
-          toast.error("No account exist")
-        }
+        } 
       } catch (error) {
         console.error("Failed to load accounts:", error);
         setError("Failed to load users");
@@ -179,7 +177,7 @@ export function FilterForm() {
             
             <div className="space-y-5">
               <FilterToggle 
-                label="By Order Size"
+                label="By OrderSize($)"
                 checked={settings.buy.Filter.byOrderSize.isActive}
                 onChange={() => toggleSetting('buy', 'byOrderSize')}
               >
@@ -194,7 +192,7 @@ export function FilterForm() {
               </FilterToggle>
 
               <FilterToggle 
-                label="By Price"
+                label="By Price($)"
                 checked={settings.buy.Filter.byPrice.isActive}
                 onChange={() => toggleSetting('buy', 'byPrice')}
               >
@@ -209,7 +207,7 @@ export function FilterForm() {
               </FilterToggle>
 
               <SportsToggle 
-                label="By Sport"
+                label="By Sports"
                 checked={settings.buy.Filter.bySports.isActive}
                 onChange={() => toggleSetting('buy', 'bySports')}
                 sports={sportsList}
@@ -233,7 +231,7 @@ export function FilterForm() {
               </FilterToggle>
 
               <FilterToggle 
-                label="By Min/Max Trigger Amount"
+                label="By Min/Max Trigger Amount($)"
                 checked={settings.buy.Filter.byMinMaxAmount.isActive}
                 onChange={() => toggleSetting('buy', 'byMinMaxAmount')}
               >
@@ -260,7 +258,7 @@ export function FilterForm() {
             
             <div className="space-y-5">
               <FilterToggle 
-                label="By Order Size"
+                label="By OrderSize($)"
                 checked={settings.sell.Filter.byOrderSize.isActive}
                 onChange={() => toggleSetting('sell', 'byOrderSize')}
               >
@@ -275,7 +273,7 @@ export function FilterForm() {
               </FilterToggle>
 
               <FilterToggle 
-                label="By Price"
+                label="By Price($)"
                 checked={settings.sell.Filter.byPrice.isActive}
                 onChange={() => toggleSetting('sell', 'byPrice')}
               >
@@ -290,7 +288,7 @@ export function FilterForm() {
               </FilterToggle>
 
               <SportsToggle 
-                label="By Sport"
+                label="By Sports"
                 checked={settings.sell.Filter.bySports.isActive}
                 onChange={() => toggleSetting('sell', 'bySports')}
                 sports={sportsList}
@@ -314,7 +312,7 @@ export function FilterForm() {
               </FilterToggle>
 
               <FilterToggle 
-                label="By Min/Max Trigger Amount"
+                label="By Min/Max Trigger Amount($)"
                 checked={settings.sell.Filter.byMinMaxAmount.isActive}
                 onChange={() => toggleSetting('sell', 'byMinMaxAmount')}
               >
@@ -512,7 +510,7 @@ const OrderSizeSection = ({ type, size, sizeType, onSizeChange, onTypeChange }: 
       <Badge variant="secondary" className={type === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
         {type === 'buy' ? 'Buy' : 'Sell'}
       </Badge>
-      <Label className="text-white">Order Size:</Label>
+      <Label className="text-white">OrderSize:</Label>
       <Input 
         className="w-32 bg-gray-700 border-gray-600 text-white"
         value={size}
@@ -542,7 +540,7 @@ const OrderSizeSection = ({ type, size, sizeType, onSizeChange, onTypeChange }: 
           className="text-blue-500 border-gray-500"
         />
         <Label htmlFor={`${type}-fixed`} className="text-gray-300">
-          Copying Trade with fixed amount({type === 'buy' ? '$' : 'shares'})
+          Copying Trade with fixed amount($)
         </Label>
       </div>
     </RadioGroup>
@@ -555,7 +553,7 @@ const LimitationSection = ({ type, size, limitType, onSizeChange, onTypeChange }
       <Badge variant="secondary" className={type === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
         {type === 'buy' ? 'Buy' : 'Sell'}
       </Badge>
-      <Label className="text-white">Limit:</Label>
+      <Label className="text-white">Limit($):</Label>
       <Input 
         className="w-32 bg-gray-700 border-gray-600 text-white"
         value={size}
@@ -575,7 +573,8 @@ const LimitationSection = ({ type, size, limitType, onSizeChange, onTypeChange }
           className="text-blue-500 border-gray-500"
         />
         <Label htmlFor={`${type}-specific`} className="text-gray-300">
-          {type === 'buy' ? 'Not higher than specific price' : 'Not lower than specific price'}
+          Not higher than specific price($)
+          {/* {type === 'buy' ? 'Not higher than specific price' : 'Not lower than specific price'} */}
         </Label>
       </div>
       <div className="flex items-center gap-3">
@@ -585,9 +584,10 @@ const LimitationSection = ({ type, size, limitType, onSizeChange, onTypeChange }
           className="text-blue-500 border-gray-500"
         />
         <Label htmlFor={`${type}-original`} className="text-gray-300">
-          {type === 'buy' 
+          {/* {type === 'buy' 
             ? 'Allow 2-3% higher than original' 
-            : 'Allow 2-3% lower than original'}
+            : 'Allow 2-3% lower than original'} */}
+            Allow 2-3% higher than original($)
         </Label>
       </div>
     </RadioGroup>

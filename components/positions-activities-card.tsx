@@ -62,8 +62,8 @@ export function PositionsActivitiesCard() {
       setAccountsError(null);
       try {
         const loadedAccounts = await getAccounts();
-        setAccounts(loadedAccounts);
         if (loadedAccounts.length > 0) {
+          setAccounts(loadedAccounts);
           setSelectedUser(loadedAccounts[0].id);
           setWalletAddress(loadedAccounts[0].proxyWallet);
         }
@@ -121,7 +121,7 @@ export function PositionsActivitiesCard() {
 
   useEffect(() => {
     fetchPostion();
-    const interval = setInterval(fetchPostion, 30000); // Refresh every 10 seconds
+    const interval = setInterval(fetchPostion, 60000); // Refresh every 60 seconds
     
     return () => {
       clearInterval(interval);
