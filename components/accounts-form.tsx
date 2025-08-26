@@ -318,7 +318,7 @@ export default function AccountsForm() {
                                         <TableCell>
                                             <div className="flex items-center gap-2">
                                                 <span className="font-mono text-gray-400">
-                                                    {account.showKey ? account.privateKey : '••••••••••••••••'}
+                                                    {account.showKey ? account.privateKey.substring(0, 6)+'...'+account.privateKey.slice(-4) : '••••••••••••••••'}
                                                 </span>
                                                 <button
                                                     type="button"
