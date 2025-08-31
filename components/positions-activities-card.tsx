@@ -121,7 +121,7 @@ export function PositionsActivitiesCard() {
 
   useEffect(() => {
     fetchPostion();
-    const interval = setInterval(fetchPostion, 60000); // Refresh every 60 seconds
+    const interval = setInterval(fetchPostion, 10000); // Refresh every 60 seconds
     
     return () => {
       clearInterval(interval);
@@ -316,6 +316,7 @@ export function PositionsActivitiesCard() {
                                   setSelectedPosition(position)
                                   setSellModalOpen(true)
                                 }}
+                                disabled={position.redeemable}
                               >
                                 <ArrowDownRight className="h-4 w-4" />
                                 Sell

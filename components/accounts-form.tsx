@@ -128,69 +128,118 @@ export default function AccountsForm() {
         ));
     };
 
-    const CopyhandleClick = async (id: string) => 
-      {
+    const CopyhandleClick = async (id: string) => {
         try {
-          
-          const accountToCopy = accounts.find(acc => acc.id === id);
-          if (!accountToCopy) return;
-
-          const accountSetting = await getSettings(accountToCopy.proxyWallet);
-          
-          if (!accountSetting){
-            toast.error("Please fill filter settings");
-            return;
-          }
-
-          const hasBuyConditions = (
-            accountSetting.buy.Filter.byOrderSize.isActive || 
-            accountSetting.buy.Filter.bySports || 
-            accountSetting.buy.Filter.byMinMaxAmount.isActive || 
-            accountSetting.buy.Filter.byDaysTillEvent || 
-            accountSetting.buy.Filter.byPrice.isActive
-          );
-          
-          const hasSellConditions = (
-            accountSetting.sell.Filter.byOrderSize.isActive || 
-            accountSetting.sell.Filter.bySports || 
-            accountSetting.sell.Filter.byMinMaxAmount.isActive || 
-            accountSetting.sell.Filter.byDaysTillEvent || 
-            accountSetting.sell.Filter.byPrice.isActive
-          );
-          
-          const hasCopyOrderConditions = (
-            accountSetting.buy.OrderSize.size || 
-            accountSetting.buy.OrderSize.type || 
-            accountSetting.sell.OrderSize.size || 
-            accountSetting.sell.OrderSize.type
-          );
-          
-          const hasLimitOrderConditions = (
-            accountSetting.buy.Limitation.size || 
-            accountSetting.buy.Limitation.type || 
-            accountSetting.sell.Limitation.size || 
-            accountSetting.sell.Limitation.type
-          );
-          
-          
-          const missingConditions = [];
-          if (!hasBuyConditions) missingConditions.push("buy conditions");
-          if (!hasSellConditions) missingConditions.push("sell conditions");
-          if (!hasCopyOrderConditions) missingConditions.push("copy order conditions");
-          if (!hasLimitOrderConditions) missingConditions.push("limit order conditions");
-          
-          if (missingConditions.length === 0) {
+            console.log(`Starting copy trading for account ID: ${id}`);
             
-            await startCopyTrading(accountSetting);
+            // Validate accounts array exists
+            if (!accounts || !Array.isArray(accounts)) {
+                toast.error("Accounts data not available");
+                return;
+            }
+
+            const accountToCopy = accounts.find(acc => acc.id === id);
+            if (!accountToCopy) {
+                toast.error("Account not found");
+                return;
+            }
+
+            // Validate proxy wallet exists
+            if (!accountToCopy.proxyWallet) {
+                toast.error("Proxy wallet address is missing");
+                return;
+            }
+
+            let accountSetting;
+            try {
+                accountSetting = await getSettings(accountToCopy.proxyWallet);
+            } catch (settingsError) {
+                console.error("Error fetching settings:", settingsError);
+                toast.error("Failed to load account settings");
+                return;
+            }
+            
+            if (!accountSetting) {
+                toast.error("Please configure filter settings first");
+                return;
+            }
+
+            // Validate accountSetting structure
+            if (!accountSetting.buy || !accountSetting.sell) {
+                toast.error("Invalid settings structure");
+                return;
+            }
+
+            // Safe check for buy conditions with proper null/undefined handling
+            const hasBuyConditions = (
+                (accountSetting.buy.Filter?.byOrderSize?.isActive || false) || 
+                (accountSetting.buy.Filter?.bySports?.isActive || false) || 
+                (accountSetting.buy.Filter?.byMinMaxAmount?.isActive || false) || 
+                (accountSetting.buy.Filter?.byDaysTillEvent?.isActive || false) || 
+                (accountSetting.buy.Filter?.byPrice?.isActive || false)
+            );
+            
+            // Safe check for sell conditions with proper null/undefined handling
+            const hasSellConditions = (
+                (accountSetting.sell.Filter?.byOrderSize?.isActive || false) || 
+                (accountSetting.sell.Filter?.bySports?.isActive || false) || 
+                (accountSetting.sell.Filter?.byMinMaxAmount?.isActive || false) || 
+                (accountSetting.sell.Filter?.byDaysTillEvent?.isActive || false) || 
+                (accountSetting.sell.Filter?.byPrice?.isActive || false)
+            );
+            
+            // Safe check for copy order conditions
+            const hasCopyOrderConditions = (
+                (accountSetting.buy.OrderSize?.size || "").toString().trim() !== "" || 
+                (accountSetting.buy.OrderSize?.type || "").toString().trim() !== "" || 
+                (accountSetting.sell.OrderSize?.size || "").toString().trim() !== "" || 
+                (accountSetting.sell.OrderSize?.type || "").toString().trim() !== ""
+            );
+            
+            // Safe check for limit order conditions
+            const hasLimitOrderConditions = (
+                (accountSetting.buy.Limitation?.size || "").toString().trim() !== "" || 
+                (accountSetting.buy.Limitation?.type || "").toString().trim() !== "" || 
+                (accountSetting.sell.Limitation?.size || "").toString().trim() !== "" || 
+                (accountSetting.sell.Limitation?.type || "").toString().trim() !== ""
+            );
+            
+            const missingConditions = [];
+            if (!hasBuyConditions) missingConditions.push("buy conditions");
+            if (!hasSellConditions) missingConditions.push("sell conditions");
+            if (!hasCopyOrderConditions) missingConditions.push("copy order conditions");
+            if (!hasLimitOrderConditions) missingConditions.push("limit order conditions");
+            
+            if (missingConditions.length > 0) {
+                toast.error(`Please configure: ${missingConditions.join(", ")}`);
+                return;
+            }
+
+            // Start copy trading
+            try {
+            const result = await startCopyTrading(accountToCopy.proxyWallet);
+            
+            if (!result) {
+                throw new Error("No response from server");
+            }
+            
+            if (result.error) {
+                throw new Error(result.error);
+            }
+            
             toggleAccountStatus(id);
             toast.success("Monitoring successfully started");
-          } else {
-            toast.error(`Please configure: ${missingConditions.join(", ")}`);
-          }
+            console.log("Copy trading started successfully for:", accountToCopy.proxyWallet);
+            
+            } catch (tradingError) {
+            console.error("Error starting copy trading:", tradingError);
+            }
+            
         } catch (error) {
-          console.log(error);
+            console.error("Unexpected error in CopyhandleClick:", error);
+            toast.error("An unexpected error occurred");
         }
-      } 
+    }; 
       
       const StophandleClick = async (id: string) => 
       {

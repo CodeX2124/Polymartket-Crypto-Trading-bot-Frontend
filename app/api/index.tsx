@@ -1,25 +1,35 @@
 "use client";
 import { Account } from '@/app/Interface/account';
 
-const startCopyTrading = async (settings: any) => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_Backend_URI}/api/trade-monitor`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(settings),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save settings');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error saving settings:', error);
+const startCopyTrading = async (proxyAddress: string) => {
+  try {
+    if (!proxyAddress) {
+      throw new Error("Proxy address is required");
     }
-}
+
+    const backendUri = process.env.NEXT_PUBLIC_Backend_URI;
+    if (!backendUri) {
+      throw new Error("Backend URI is not configured");
+    }
+
+    const response = await fetch(`${backendUri}/api/trade-monitor`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ proxyAddress }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Server returned ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error starting copy trading:', error);
+  }
+};
 
 
 const stopCopyTrading = async (proxyAddress: string) => {
