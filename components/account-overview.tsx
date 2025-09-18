@@ -106,6 +106,11 @@ export function AccountOverview() {
 
   useEffect(() => {
     fetchAccountData();
+    const interval2 = setInterval(fetchAccountData, 60000); // Refresh every 60 seconds
+    
+    return () => {
+      clearInterval(interval2);
+    }
   }, [walletAddress]);
 
   if (data.loading) {

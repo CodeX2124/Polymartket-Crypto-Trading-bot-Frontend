@@ -271,7 +271,7 @@ export function PositionsActivitiesCard() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-white">
-                        ${(position.avgPrice * position.totalBought).toFixed(2)}
+                        ${position.initialValue.toFixed(2)}
                       </TableCell>
                       <TableCell className="text-white">
                           {position.size.toFixed(2)} 
